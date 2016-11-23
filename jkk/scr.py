@@ -19,7 +19,7 @@ def run():
     rows = soup.find_all("table", class_="cell666666")[1].select('tr')
     for row in rows:
         row.find('td').text.strip()
-    send("example@example.com", u"JKK検索結果: なし", u"ぼぢゅ")
+    send(os.environ.get('MAIL_RECIPIENT'), u"JKK検索結果: なし", u"ぼぢゅ")
 
 
 def token(s):
