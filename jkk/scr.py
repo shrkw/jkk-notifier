@@ -18,9 +18,14 @@ def run():
     token = get_token(s)
     soup = search(s, token)
     rows = soup.find_all("table", class_="cell666666")[1].select('tr')
-    for row in rows:
-        row.find('td').text.strip()
-    send(os.environ.get('MAIL_RECIPIENT'), u"JKK検索結果: なし", u"ぼぢゅ")
+    rows = [row.find('td').text.strip() for row in rows]
+    q = u'アイル連雀'
+    if q in rows:
+        subject = u'JKK検索結果: 見つかりました: %s' % q
+    else:
+        subject = u'JKK検索結果: 見つかりませんでした: %s' % q
+    body = '\n'.join(rows)
+    send(os.environ.get('MAIL_RECIPIENT'), subject, body)
 
 def get_token(s):
     payload = {'redirect': 'true', 'link_id': '01' }
