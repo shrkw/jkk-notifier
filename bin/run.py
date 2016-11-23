@@ -24,7 +24,7 @@ if __name__ == "__main__":
     now = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
     if now.hour in range(9, 18):
         try:
-            scr.run()
+            scr.run(now.hour == 10)
         except Exception as e:
             logger.error('Error: ', exc_info=True)
     else:
