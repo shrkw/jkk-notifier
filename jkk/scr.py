@@ -4,6 +4,7 @@
 from __future__ import division, print_function, absolute_import
 from bs4 import BeautifulSoup
 import requests
+import os
 
 from .mailer import send
 
@@ -14,45 +15,47 @@ logger.addHandler(handler)
 
 def run():
     s = requests.Session()
-    token = token(s)
-    search(s, token)
+    token = get_token(s)
+    soup = search(s, token)
     rows = soup.find_all("table", class_="cell666666")[1].select('tr')
     for row in rows:
         row.find('td').text.strip()
     send(os.environ.get('MAIL_RECIPIENT'), u"JKK検索結果: なし", u"ぼぢゅ")
 
-
-def token(s):
+def get_token(s):
     payload = {'redirect': 'true', 'link_id': '01' }
     r = s.post('https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenStartInit', data=payload)
-    soup = BeautifulSoup(r.text, from_encoding="CP932")
+    r.encoding = 'CP932'
+    soup = BeautifulSoup(r.text, "html.parser")
     token = soup.find(attrs={"name":"token"})['value']
     return token
 
-
 def search(s, token):
-    headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36', 'Origin': 'https://jhomes.to-kousya.or.jp', 'Referer': 'https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyokenDirect' }
+    headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
+        'Origin': 'https://jhomes.to-kousya.or.jp',
+        'Referer': 'https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyokenDirect' }
 
     query = {
-    'akiyaInitRM.akiyaRefM.checks': '34',
-    'akiyaInitRM.akiyaRefM.yachinFrom': '0',
-    'akiyaInitRM.akiyaRefM.yachinTo': '999999999',
-    'akiyaInitRM.akiyaRefM.mensekiFrom': '0',
-    'akiyaInitRM.akiyaRefM.mensekiTo': '9999.99',
-    'akiyaInitRM.akiyaRefM.yusenBoshu': '',
-    'akiyaInitRM.akiyaRefM.jyutakuKanaName': '',
-    'akiyaInitRM.akiyaRefM.ensenCd': '',
-    'akiyaInitRM.akiyaRefM.mskKbn': '',
-    'token': token,
-    'abcde': 'EF8F0627B5A8184A6BA3E8705A00F068',
-    'jklm': 'E17511BF89D3A101AFEF10EBF1587561',
-    'sen_flg': '1',
-    'akiyaInitRM.akiyaRefM.allCheck': '',
-    'akiyaInitRM.akiyaRefM.madoris': '',
-    'akiyaInitRM.akiyaRefM.tanshinFlg': '',
-    'akiyaInitRM.akiyaRefM.teishiKaiFlg': '',
-    'akiyaInitRM.akiyaRefM.yuguFlg': ''
+        'akiyaInitRM.akiyaRefM.checks': '34',
+        'akiyaInitRM.akiyaRefM.yachinFrom': '0',
+        'akiyaInitRM.akiyaRefM.yachinTo': '999999999',
+        'akiyaInitRM.akiyaRefM.mensekiFrom': '0',
+        'akiyaInitRM.akiyaRefM.mensekiTo': '9999.99',
+        'akiyaInitRM.akiyaRefM.yusenBoshu': '',
+        'akiyaInitRM.akiyaRefM.jyutakuKanaName': '',
+        'akiyaInitRM.akiyaRefM.ensenCd': '',
+        'akiyaInitRM.akiyaRefM.mskKbn': '',
+        'token': token,
+        'abcde': 'EF8F0627B5A8184A6BA3E8705A00F068',
+        'jklm': 'E17511BF89D3A101AFEF10EBF1587561',
+        'sen_flg': '1',
+        'akiyaInitRM.akiyaRefM.allCheck': '',
+        'akiyaInitRM.akiyaRefM.madoris': '',
+        'akiyaInitRM.akiyaRefM.tanshinFlg': '',
+        'akiyaInitRM.akiyaRefM.teishiKaiFlg': '',
+        'akiyaInitRM.akiyaRefM.yuguFlg': ''
     }
-    s.post('https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenRef', headers=headers, data=query)
-    soup = BeautifulSoup(r.text, from_encoding="CP932")
+    r = s.post('https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenRef', headers=headers, data=query)
+    r.encoding = 'CP932'
+    soup = BeautifulSoup(r.text, "html.parser")
     return soup
