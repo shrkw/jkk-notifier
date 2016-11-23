@@ -13,7 +13,7 @@ from .logger import handler
 logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
-def run():
+def run(force_send):
     s = requests.Session()
     token = get_token(s)
     soup = search(s, token)
@@ -24,8 +24,10 @@ def run():
         subject = u'JKK検索結果: 見つかりました: %s' % q
     else:
         subject = u'JKK検索結果: 見つかりませんでした: %s' % q
-    body = '\n'.join(rows)
-    send(os.environ.get('MAIL_RECIPIENT'), subject, body)
+
+    if q in rows or force_send:
+        body = '\n'.join(rows)
+        send(os.environ.get('MAIL_RECIPIENT'), subject, body)
 
 def get_token(s):
     payload = {'redirect': 'true', 'link_id': '01' }
