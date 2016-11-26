@@ -6,14 +6,14 @@ from bs4 import BeautifulSoup
 import requests
 import os
 
-from .mailer import send
+from .mailer import send_search_result
 
 import logging
 from .logger import handler
 logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
-def run(force_send):
+def run(force_send=False):
     s = requests.Session()
     token = get_token(s)
     soup = search(s, token)
@@ -26,8 +26,7 @@ def run(force_send):
         subject = u'JKK検索結果: 見つかりませんでした: %s' % q
 
     if q in rows or force_send:
-        body = '\n'.join(rows)
-        send(os.environ.get('MAIL_RECIPIENT'), subject, body)
+        send_search_result(os.environ.get('MAIL_RECIPIENT'), subject, { "title": subject, "apartments": rows})
 
 def get_token(s):
     payload = {'redirect': 'true', 'link_id': '01' }
