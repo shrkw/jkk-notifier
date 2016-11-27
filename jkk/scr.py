@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
 def run(force_send=False):
-    call(os.environ.get('MAIL_RECIPIENT'), u'アイルレンジャク')
+    co = get_collection('condition')
+    for row in co.find():
+        call(row['recipient'], row['q_word'])
 
 def call(recipient, q_word):
     s = Searcher()
