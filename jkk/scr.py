@@ -14,13 +14,15 @@ logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
 def run(force_send=False):
+    call(os.environ.get('MAIL_RECIPIENT'), u'アイルレンジャク')
+
+def call(recipient, q_word):
     s = Searcher()
-    qq = u'アイルレンジャク'
-    soup = s.search(q_kana=qq)
+    soup = s.search(q_kana=q_word)
     err = soup.find('li', class_='error')
     if err and u'空室はございません' in err.text:
-        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: 見つかりませんでした: %s' % qq, { "title": u'JKK検索結果: 見つかりませんでした: %s' % qq, "lead": u'10分おきに検索します', "query": qq})
+        send_search_result(recipient, u'JKK検索結果: 見つかりませんでした: %s' % q_word, { "title": u'JKK検索結果: 見つかりませんでした: %s' % q_word, "lead": u'10分おきに検索します', "query": q_word})
     elif err:
-        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: エラーがおきました: %s' % qq, { "title": u'JKK検索結果: エラーがおきました: %s' % qq, "lead": err.text, "query": qq})
+        send_search_result(recipient, u'JKK検索結果: エラーがおきました: %s' % q_word, { "title": u'JKK検索結果: エラーがおきました: %s' % q_word, "lead": err.text, "query": q_word})
     else:
-        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: 見つかりました: %s' % qq, { "title": u'JKK検索結果: 見つかりました: %s' % qq, "lead": u'すぐにチェックして申し込みましょう', "query": qq})
+        send_search_result(recipient, u'JKK検索結果: 見つかりました: %s' % q_word, { "title": u'JKK検索結果: 見つかりました: %s' % q_word, "lead": u'すぐにチェックして申し込みましょう', "query": q_word})
