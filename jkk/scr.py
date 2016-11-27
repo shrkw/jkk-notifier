@@ -5,6 +5,7 @@ from __future__ import division, print_function, absolute_import
 import os
 
 from .mailer import send_search_result
+from .mongo import get_collection
 from .searcher import Searcher
 
 import logging
@@ -14,52 +15,12 @@ logger.addHandler(handler)
 
 def run(force_send=False):
     s = Searcher()
-    soup = s.search(q_city_code='34')
-    rows = soup.find_all("table", class_="cell666666")[1].select('tr')
-    rows = [row.find('td').text.strip() for row in rows]
-    q = u'アイル連雀'
-    if q in rows:
-        subject = u'JKK検索結果: 見つかりました: %s' % q
+    qq = u'アイルレンジャク'
+    soup = s.search(q_kana=qq)
+    err = soup.find('li', class_='error')
+    if err and u'空室はございません' in err.text:
+        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: 見つかりませんでした: %s' % qq, { "title": u'JKK検索結果: 見つかりませんでした: %s' % qq, "lead": u'10分おきに検索します', "query": qq})
+    elif err:
+        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: エラーがおきました: %s' % qq, { "title": u'JKK検索結果: エラーがおきました: %s' % qq, "lead": err.text, "query": qq})
     else:
-        subject = u'JKK検索結果: 見つかりませんでした: %s' % q
-
-    if q in rows or force_send:
-        send_search_result(os.environ.get('MAIL_RECIPIENT'), subject, { "title": subject, "apartments": rows})
-
-def get_token(s):
-    payload = {'redirect': 'true', 'link_id': '01' }
-    r = s.post('https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenStartInit', data=payload)
-    r.encoding = 'CP932'
-    soup = BeautifulSoup(r.text, "html.parser")
-    token = soup.find(attrs={"name":"token"})['value']
-    return token
-
-def search(s, token):
-    headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
-        'Origin': 'https://jhomes.to-kousya.or.jp',
-        'Referer': 'https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyokenDirect' }
-
-    query = {
-        'akiyaInitRM.akiyaRefM.checks': '34',
-        'akiyaInitRM.akiyaRefM.yachinFrom': '0',
-        'akiyaInitRM.akiyaRefM.yachinTo': '999999999',
-        'akiyaInitRM.akiyaRefM.mensekiFrom': '0',
-        'akiyaInitRM.akiyaRefM.mensekiTo': '9999.99',
-        'akiyaInitRM.akiyaRefM.yusenBoshu': '',
-        'akiyaInitRM.akiyaRefM.jyutakuKanaName': '',
-        'akiyaInitRM.akiyaRefM.ensenCd': '',
-        'akiyaInitRM.akiyaRefM.mskKbn': '',
-        'token': token,
-        'abcde': 'EF8F0627B5A8184A6BA3E8705A00F068',
-        'jklm': 'E17511BF89D3A101AFEF10EBF1587561',
-        'sen_flg': '1',
-        'akiyaInitRM.akiyaRefM.allCheck': '',
-        'akiyaInitRM.akiyaRefM.madoris': '',
-        'akiyaInitRM.akiyaRefM.tanshinFlg': '',
-        'akiyaInitRM.akiyaRefM.teishiKaiFlg': '',
-        'akiyaInitRM.akiyaRefM.yuguFlg': ''
-    }
-    r = s.post('https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenRef', headers=headers, data=query)
-    r.encoding = 'CP932'
-    soup = BeautifulSoup(r.text, "html.parser")
-    return soup
+        send_search_result(os.environ.get('MAIL_RECIPIENT'), u'JKK検索結果: 見つかりました: %s' % qq, { "title": u'JKK検索結果: 見つかりました: %s' % qq, "lead": u'すぐにチェックして申し込みましょう', "query": qq})
