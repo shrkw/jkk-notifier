@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function, absolute_import
-from bs4 import BeautifulSoup
-import requests
 import os
 
 from .mailer import send_search_result
+from .searcher import Searcher
 
 import logging
 from .logger import handler
@@ -14,9 +13,8 @@ logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
 def run(force_send=False):
-    s = requests.Session()
-    token = get_token(s)
-    soup = search(s, token)
+    s = Searcher()
+    soup = s.search(q_city_code='34')
     rows = soup.find_all("table", class_="cell666666")[1].select('tr')
     rows = [row.find('td').text.strip() for row in rows]
     q = u'アイル連雀'
