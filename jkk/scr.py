@@ -3,6 +3,7 @@
 
 from __future__ import division, print_function, absolute_import
 import os
+import pymongo
 
 from .mailer import send_search_result
 from .mongo import get_collection
@@ -35,6 +36,9 @@ def call(force_send, recipient, q_word):
         lead = u'すぐにチェックして申し込みましょう'
         found = True
     co = get_collection('search_histories')
+    rows = list(co.find().sort('_id', pymongo.DESCENDING).limit(1))
     co.insert_one({"found": found, "subject": subject, "q_word": q_word})
-    if force_send or found:
+    # treat the status is changed when first search
+    status_changed = len(rows) == 0 or rows[0]['found'] != found
+    if force_send or status_changed:
         send_search_result(recipient, subject, { "title": subject, "lead": lead, "query": q_word})
