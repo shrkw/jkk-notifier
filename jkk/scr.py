@@ -17,9 +17,9 @@ logger.addHandler(handler)
 def run(force_send=False):
     co = get_collection('conditions')
     for row in co.find():
-        call(force_send, row['recipient'], row['q_word'])
+        call(force_send, str(row['_id']), row['recipient'], row['q_word'])
 
-def call(force_send, recipient, q_word):
+def call(force_send, id, recipient, q_word):
     s = Searcher()
     soup = s.search(q_kana=q_word)
     err = soup.find('li', class_='error')
@@ -36,9 +36,9 @@ def call(force_send, recipient, q_word):
         lead = u'すぐにチェックして申し込みましょう'
         found = True
     co = get_collection('search_histories')
-    rows = list(co.find().sort('_id', pymongo.DESCENDING).limit(1))
+    rows = list(co.find({"condition_id": id}).sort('_id', pymongo.DESCENDING).limit(1))
     co.insert_one({"found": found, "subject": subject, "q_word": q_word})
     # treat the status is changed when first search
     status_changed = len(rows) == 0 or rows[0]['found'] != found
     if force_send or status_changed:
-        send_search_result(recipient, subject, { "title": subject, "lead": lead, "query": q_word})
+        send_search_result(recipient, subject, { "title": subject, "condition_id": id, "lead": lead, "query": q_word})
