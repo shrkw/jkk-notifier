@@ -26,7 +26,7 @@ def call(force_send, id_, recipient, q_word):
     soup = s.search(q_kana=q_word)
     err = soup.find('li', class_='error')
     subject, lead, found = collect(err, q_word)
-    tbl = soup.find_all("table", class_="cell666666")[1]
+    tbl = cleanse_table(soup) if found else None
     co = get_collection('search_histories')
     rows = list(co.find({"condition_id": id_}).sort('_id', pymongo.DESCENDING).limit(1))
     co.insert_one({"condition_id": id_, "found": found, "subject": subject, "q_word": q_word})
@@ -49,3 +49,13 @@ def collect(err, q_word):
         lead = u'すぐにチェックして申し込みましょう'
         found = True
     return (subject, lead, found)
+
+def cleanse_table(soup):
+    tbl = soup.find_all("table", class_="cell666666")[1]
+    while tbl.a:
+        tbl.a.unwrap()
+    while tbl.img:
+        tbl.img.unwrap()
+    while tbl.input:
+        tbl.input.unwrap()
+    return tbl
