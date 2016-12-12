@@ -24,14 +24,15 @@ def call(force_send, id_, recipient, q_word):
     soup = s.search(q_kana=q_word)
     err = soup.find('li', class_='error')
     subject, lead, found = collect(err, q_word)
+    units = unit_number(soup)
 
     co = get_collection('search_histories')
     rows = list(co.find({"condition_id": id_}).sort('_id', pymongo.DESCENDING).limit(1))
-    co.insert_one({"condition_id": id_, "found": found, "subject": subject, "q_word": q_word})
+    co.insert_one({"condition_id": id_, "found": found, "units": units, "subject": subject, "q_word": q_word})
     # treat the status is changed when first search
     status_changed = len(rows) == 0 or rows[0]['found'] != found
     if force_send or status_changed:
-        send_search_result(recipient, subject, { "title": subject, "lead": lead, "query": q_word})
+        send_search_result(recipient, subject, { "title": subject, "lead": lead, "units": units, "query": q_word})
 
 def collect(err, q_word):
     if err and u'空室' in err.text:
@@ -47,3 +48,11 @@ def collect(err, q_word):
         lead = u'すぐにチェックして申し込みましょう'
         found = True
     return (subject, lead, found)
+
+def unit_number(soup):
+    try:
+        rows = soup.find_all("table", class_="cell666666")[1].find_all("tr")
+        return [t.find('td').text.split()[0] for t in rows[2::2]]
+    except:
+        print "Unexpected error:", sys.exc_info()[0]
+        return []
