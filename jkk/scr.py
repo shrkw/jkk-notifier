@@ -54,5 +54,5 @@ def unit_number(soup):
         rows = soup.find_all("table", class_="cell666666")[1].find_all("tr")
         return [t.find('td').text.split()[0] for t in rows[2::2]]
     except:
-        print "Unexpected error:", sys.exc_info()[0]
+        logger.warn("Unexpected error:", sys.exc_info()[0])
         return []
