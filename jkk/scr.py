@@ -3,6 +3,8 @@
 
 from __future__ import division, print_function, absolute_import
 import os
+import sys
+import re
 import pymongo
 
 from .mailer import send_search_result
@@ -24,6 +26,7 @@ def call(force_send, id_, recipient, q_word):
     soup = s.search(q_kana=q_word)
     err = soup.find('li', class_='error')
     subject, lead, found = collect(err, q_word)
+
     units = unit_number(soup)
 
     co = get_collection('search_histories')
@@ -51,8 +54,10 @@ def collect(err, q_word):
 
 def unit_number(soup):
     try:
+        esc = re.compile("\r|\n|\t")
+        spcs = re.compile(" +")
         rows = soup.find_all("table", class_="cell666666")[1].find_all("tr")
-        return [t.find('td').text.split()[0] for t in rows[2::2]]
+        return [spcs.sub(" ", esc.sub(" ", row.text)) for row in rows[2::2]]
     except:
         logger.warn("Unexpected error:", sys.exc_info()[0])
         return []
