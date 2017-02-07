@@ -22,9 +22,10 @@ if __name__ == "__main__":
     import datetime
     import pytz
     now = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
+    THURSDAY = 3
     if now.hour in range(9, 18):
         try:
-            scr.run(now.hour == 17 and now.minute <= 10)
+            scr.run(now.weekday == THURSDAY and now.hour == 17 and now.minute <= 10)
         except Exception as e:
             logger.error('Error: ', exc_info=True)
     else:
